@@ -1,8 +1,6 @@
 from django.contrib import admin
 from motorpool import models
 
-# Register your models here.
-
 
 @admin.register(models.Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -23,7 +21,3 @@ class AutoAdmin(admin.ModelAdmin):
 class VehiclePassportAdmin(admin.ModelAdmin):
     pass
 
-
-@admin.register(models.Profile)
-class ProfileAdmin(admin.ModelAdmin):
-    pass

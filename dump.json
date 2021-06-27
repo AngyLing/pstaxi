@@ -1,0 +1,90 @@
+[
+  {
+    "model": "motorpool.brand",
+    "pk": 1,
+    "fields": {
+      "title": "Ауди"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 1,
+    "fields": {
+      "title": "детское кресло"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 2,
+    "fields": {
+      "title": "просторный салон"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 3,
+    "fields": {
+      "title": "зарядка для телефона"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 4,
+    "fields": {
+      "title": "широкие подлокотники"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 5,
+    "fields": {
+      "title": "зарядка для телефона"
+    }
+  },
+  {
+    "model": "motorpool.option",
+    "pk": 6,
+    "fields": {
+      "title": "водитель в деловом костюме"
+    }
+  },
+  {
+    "model": "motorpool.auto",
+    "pk": 3,
+    "fields": {
+      "number": "1",
+      "description": "",
+      "year": 2,
+      "auto_class": "e",
+      "brand": 1,
+      "options": [
+        2,
+        4
+      ]
+    }
+  },
+  {
+    "model": "motorpool.auto",
+    "pk": 4,
+    "fields": {
+      "number": "2",
+      "description": "",
+      "year": 4,
+      "auto_class": "e",
+      "brand": 1,
+      "options": [
+        3
+      ]
+    }
+  },
+  {
+    "model": "motorpool.vehiclepassport",
+    "pk": 1,
+    "fields": {
+      "auto": 3,
+      "vin": "123",
+      "engine_volume": 4,
+      "engine_power": 2
+    }
+  }
+]
