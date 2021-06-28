@@ -61,7 +61,7 @@ class Auto(models.Model):
 
 
 class VehiclePassport(models.Model):
-    auto = models.OneToOneField(Auto, on_delete=models.CASCADE, related_name='pts')
+    auto = models.OneToOneField(Auto, on_delete=models.CASCADE, related_name='pts', verbose_name=Auto._meta.verbose_name)
     vin = models.CharField(max_length=30, verbose_name='Идентификационный номер (VIN)')
     engine_volume = models.SmallIntegerField(verbose_name='Объем двигателя, куб.см')
     engine_power = models.SmallIntegerField(verbose_name='Мощность двигателя, л.с.')
