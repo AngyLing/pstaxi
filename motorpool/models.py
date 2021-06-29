@@ -55,6 +55,11 @@ class Auto(models.Model):
     def __str__(self):
         return self.number
 
+    def display_engine_power(self):
+        return self.pts.engine_power
+
+    display_engine_power.short_description = 'Engine power'
+
     class Meta:
         verbose_name_plural = 'Автомобили'
         verbose_name = 'Автомобиль'
