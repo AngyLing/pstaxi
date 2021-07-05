@@ -42,8 +42,8 @@ class EnginePowerFilter(admin.SimpleListFilter):
 
 @admin.register(models.Auto)
 class AutoAdmin(admin.ModelAdmin):
-    list_display = ['id', 'number', 'brand', 'year', 'auto_class', 'display_engine_power']
-    list_select_related = ['brand', 'pts']
+    list_display = ['id', 'number', 'brand', 'year', 'auto_class', 'display_engine_power', ]
+    list_select_related = ['brand', 'pts', ]
     list_display_links = ['id', 'number', 'brand', ]
     list_filter = [EnginePowerFilter, 'auto_class', 'options', ]
     search_fields = ['brand__title', 'number', ]
@@ -54,4 +54,3 @@ class VehiclePassportAdmin(admin.ModelAdmin):
     list_display = ['id', 'auto', 'vin', 'engine_volume', 'engine_power']
     list_filter = ['auto__brand', ]
     list_select_related = ['auto__brand', ]
-
