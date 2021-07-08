@@ -1,7 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from motorpool.models import Brand
-from utils.text import plural_form
 
 
 def brand_list(request):
@@ -11,10 +10,18 @@ def brand_list(request):
     context = {
         'brand_objects': brand_objects,
         'brand_number': brand_number,
-        'brand_plural_form': plural_form(brand_number,
-                                         'топовый бренд автомобиля',
-                                         'топовых бренда автомобилей',
-                                         'топовых брендов автомобилей',),
     }
+
     return render(request, template_name, context)
+
+
+def brand_detail(request, pk):
+    brand = get_object_or_404(Brand, pk=pk)
+    context = {
+        'brand': brand,
+        'cars': brand.cars.all(),
+        'brand_number': Brand.objects.count(),
+    }
+    return render(request, 'motorpool/brand_detail.html', context)
+
 
