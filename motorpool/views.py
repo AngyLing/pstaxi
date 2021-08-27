@@ -1,5 +1,9 @@
+from django.contrib import messages
+from django.http import HttpResponseForbidden
 from django.shortcuts import render
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from motorpool.forms import SendEmailForm, BrandCreationForm, BrandUpdateForm, AutoFormSet
 from motorpool.models import Brand
 
 
@@ -38,3 +42,81 @@ class BrandDetailView(DetailView):
         default_template_names = super().get_template_names()
         return default_template_names
 
+
+def send_email_view(request):
+    if request.method == 'POST':
+        # Если метод запрос POST (нажата кнопка Отправить e-mail),
+        # то создаем экземпляр формы с данными из запроса
+        form = SendEmailForm(request.POST)
+        if form.is_valid():
+            # получаем поля формы, прошедшие валидацию
+            cd = form.cleaned_data
+            email = cd.get('email', '')
+            comment = cd.get('comment', '')
+            checkbox1 = cd.get('checkbox1', False)
+            checkbox2 = cd.get('checkbox2', False)
+            variant = int(cd.get('variant', 1))
+            variants = cd.get('variants', [])
+
+            action = request.POST.get('btn_action', '')
+            if action == 'action1':
+                print('Нажата кнопка 1')
+            elif action == 'action2':
+                print('Нажата кнопка 2')
+            else:
+                print('Нажата нераспознанная кнопка')
+        else:
+            messages.error(request, form.non_field_errors())
+    else:
+        # Если метод запрос GET (страница открыта в браузере),
+        # то создаем пустой экземпляр формы
+        form = SendEmailForm()
+
+    # Передаем форму в контекст с именем form
+    return render(request, 'motorpool/send_email.html', {'form': form})
+
+
+class BrandCreateView(CreateView):
+    model = Brand
+    template_name = 'motorpool/brand_create.html'
+    form_class = BrandCreationForm
+    success_url = reverse_lazy('motorpool:brand_list')
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden('Недостаточно прав для добавления нового объекта')
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Новый бренд создан успешно')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, form.non_field_errors())
+        return super().form_invalid(form)
+
+
+class BrandUpdateView(UpdateView):
+    model = Brand
+    template_name = 'motorpool/brand_update.html'
+    form_class = BrandUpdateForm
+
+
+class BrandDeleteView(DeleteView):
+    model = Brand
+    template_name = 'motorpool/brand_delete.html'
+    success_url = reverse_lazy('motorpool:brand_list')
+
+    def delete(self, request, *args, **kwargs):
+        result = super().delete(request, *args, **kwargs)
+        messages.success(request, f'Бренд {self.object} удалён')
+        return result
+
+
+def auto_create_view(request):
+    formset = AutoFormSet()
+    if request.method == 'POST':
+        formset = AutoFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            formset.save()
+    return render(request, 'motorpool/auto_create.html', {'formset': formset})
