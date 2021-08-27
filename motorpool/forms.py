@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import modelformset_factory
+from django.forms import inlineformset_factory
 from motorpool.models import Auto, Brand
 
 
@@ -88,10 +88,10 @@ class BrandUpdateForm(forms.ModelForm):
 class AutoCreationForm(forms.ModelForm):
     class Meta:
         model = Auto
-        fields = '__all__'
+        exclude = ['brand', 'id']
 
     def __init__(self, *args, **kwargs):
-        super(self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         fields_form_select = ('number', 'year', 'options', 'auto_class')
         fields_form_control = ('number', 'year', 'description')
         for field in fields_form_select:
@@ -102,9 +102,34 @@ class AutoCreationForm(forms.ModelForm):
         self.fields['description'].widget.attrs.update({'rows': 3})
 
 
-class BaseAutoCreationFormSet(forms.BaseModelFormSet):
+class BaseAutoCreationFormSet(forms.BaseInlineFormSet):
     def get_queryset(self):
         return Auto.objects.none()
 
+    def clean(self):
+        """Проверим что добавляемые автомобили не имеют одинаковых номеров"""
 
-AutoFormSet = modelformset_factory(Auto, form=AutoCreationForm, formset=BaseAutoCreationFormSet, extra=2)
+        if any(self.errors):
+            # если какая-либо из форм не прошла проверку, то ничего не выполняем
+            return
+
+        all_forms_is_empty = True
+        numbers = []
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                # если форма помечена как удаленная, то пропускаем ее
+                continue
+            all_forms_is_empty = all_forms_is_empty and not any(form.cleaned_data)
+            number = form.cleaned_data.get('number')
+            if number and number in numbers:
+                raise forms.ValidationError(f"В наборе присутствуют машины с одинаковым номером: {number}")
+            numbers.append(number)
+
+        if all_forms_is_empty:
+            raise forms.ValidationError("Все формы пустые. Заполните данные.")
+
+
+AutoFormSet = forms.inlineformset_factory(Brand, Auto, form=AutoCreationForm, formset=BaseAutoCreationFormSet, extra=2)
+
+
+

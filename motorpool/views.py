@@ -1,7 +1,8 @@
 from django.contrib import messages
-from django.http import HttpResponseForbidden
-from django.shortcuts import render
-from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
+from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic.edit import ProcessFormView
 from django.urls import reverse_lazy
 from motorpool.forms import SendEmailForm, BrandCreationForm, BrandUpdateForm, AutoFormSet
 from motorpool.models import Brand
@@ -76,16 +77,18 @@ def send_email_view(request):
     return render(request, 'motorpool/send_email.html', {'form': form})
 
 
-class BrandCreateView(CreateView):
+class LoginRequiredMixin:
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse_lazy('admin:login'))
+        return super().get(request, *args, **kwargs)
+
+
+class BrandCreateView(LoginRequiredMixin, CreateView):
     model = Brand
     template_name = 'motorpool/brand_create.html'
     form_class = BrandCreationForm
     success_url = reverse_lazy('motorpool:brand_list')
-
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return HttpResponseForbidden('Недостаточно прав для добавления нового объекта')
-        return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.success(self.request, 'Новый бренд создан успешно')
@@ -113,10 +116,25 @@ class BrandDeleteView(DeleteView):
         return result
 
 
-def auto_create_view(request):
-    formset = AutoFormSet()
-    if request.method == 'POST':
-        formset = AutoFormSet(request.POST, request.FILES)
+class AutoCreateView(LoginRequiredMixin, ProcessFormView, TemplateView):
+
+    template_name = 'motorpool/auto_create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        brand = get_object_or_404(Brand, pk=self.kwargs.get('brand_pk', ''))
+        if self.request.method == 'POST':
+            formset = AutoFormSet(self.request.POST, self.request.FILES, instance=brand)
+        else:
+            formset = AutoFormSet(instance=brand)
+        context['formset'] = formset
+        return context
+
+    def post(self, request, *args, **kwargs):
+        brand = get_object_or_404(Brand, pk=kwargs.get('brand_pk', ''))
+        formset = AutoFormSet(request.POST, request.FILES, instance=brand)
         if formset.is_valid():
             formset.save()
-    return render(request, 'motorpool/auto_create.html', {'formset': formset})
+            return HttpResponseRedirect(brand.get_absolute_url())
+        return super().get(request, *args, **kwargs)
+
