@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from motorpool.models import Auto, Brand
+from motorpool.models import Brand, Auto, Favorite
 
 
 class SendEmailForm(forms.Form):
@@ -129,7 +129,24 @@ class BaseAutoCreationFormSet(forms.BaseInlineFormSet):
             raise forms.ValidationError("Все формы пустые. Заполните данные.")
 
 
-AutoFormSet = forms.inlineformset_factory(Brand, Auto, form=AutoCreationForm, formset=BaseAutoCreationFormSet, extra=2)
+AutoFormSet = inlineformset_factory(Brand, Auto, form=AutoCreationForm, formset=BaseAutoCreationFormSet, extra=2)
 
 
+class BrandAddToFavoriteForm(forms.ModelForm):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget = forms.HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if Favorite.objects.filter(user=cleaned_data['user'], brand=cleaned_data['brand']).exists():
+            raise forms.ValidationError(f'Бренд уже добавлен в избранное')
+
+        return cleaned_data
 

@@ -4,8 +4,9 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views.generic.edit import ProcessFormView
 from django.urls import reverse_lazy
-from motorpool.forms import SendEmailForm, BrandCreationForm, BrandUpdateForm, AutoFormSet
-from motorpool.models import Brand
+from motorpool.forms import (SendEmailForm, BrandCreationForm, BrandUpdateForm,
+                             AutoFormSet, BrandAddToFavoriteForm)
+from motorpool.models import Brand, Favorite
 
 
 class BrandListView(ListView):
@@ -37,6 +38,7 @@ class BrandDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['cars'] = self.object.cars.all()
+        context['favorite_form'] = BrandAddToFavoriteForm(initial={'user': self.request.user, 'brand': self.object})
         return context
 
     def get_template_names(self):
@@ -137,4 +139,24 @@ class AutoCreateView(LoginRequiredMixin, ProcessFormView, TemplateView):
             formset.save()
             return HttpResponseRedirect(brand.get_absolute_url())
         return super().get(request, *args, **kwargs)
+
+
+class BrandAddToFavoriteView(LoginRequiredMixin, CreateView):
+    model = Favorite
+    form_class = BrandAddToFavoriteForm
+
+    def get_success_url(self):
+        return self.object.brand.get_absolute_url()
+
+    def form_invalid(self, form):
+        messages.error(self.request, form.non_field_errors())
+        brand = form.cleaned_data.get('brand', None)
+        if not brand:
+            brand = get_object_or_404(Brand, pk=form.data.get('brand'))
+        redirect_url = brand.get_absolute_url() if brand else reverse_lazy('motorpool:brand_list')
+        return HttpResponseRedirect(redirect_url)
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Бренд { form.cleaned_data["brand"]} добавлен в избранное')
+        return super().form_valid(form)
 
