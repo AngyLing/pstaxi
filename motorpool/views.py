@@ -31,19 +31,11 @@ class BrandDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    def get_object(self, queryset=None):
-        default_object = super().get_object(queryset)
-        return default_object
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['cars'] = self.object.cars.all()
         context['favorite_form'] = BrandAddToFavoriteForm(initial={'user': self.request.user, 'brand': self.object})
         return context
-
-    def get_template_names(self):
-        default_template_names = super().get_template_names()
-        return default_template_names
 
 
 def send_email_view(request):
